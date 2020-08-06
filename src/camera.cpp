@@ -40,28 +40,32 @@ void Camera::process_input() {
     Window &window = graphics.window;
     GLFWwindow *glfw_window = window.window;
     bool should_update = false;
+    float speed = movementSpeed;
+    if (glfwGetKey(glfw_window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS) {
+        speed *= 10;
+    }
     if (glfwGetKey(glfw_window, GLFW_KEY_W) == GLFW_PRESS) {
-        position += movementSpeed * graphics.deltaTime * direction;
+        position += speed * graphics.deltaTime * direction;
         should_update = true;
     }
     if (glfwGetKey(glfw_window, GLFW_KEY_S) == GLFW_PRESS) {
-        position += -movementSpeed * graphics.deltaTime * direction;
+        position += -speed * graphics.deltaTime * direction;
         should_update = true;
     }
     if (glfwGetKey(glfw_window, GLFW_KEY_A) == GLFW_PRESS) {
-        position += -movementSpeed * graphics.deltaTime * glm::normalize(glm::cross(direction, up));
+        position += -speed * graphics.deltaTime * glm::normalize(glm::cross(direction, up));
         should_update = true;
     }
     if (glfwGetKey(glfw_window, GLFW_KEY_D) == GLFW_PRESS) {
-        position += movementSpeed * graphics.deltaTime * glm::normalize(glm::cross(direction, up));
+        position += speed * graphics.deltaTime * glm::normalize(glm::cross(direction, up));
         should_update = true;
     }
     if (glfwGetKey(glfw_window, GLFW_KEY_SPACE) == GLFW_PRESS) {
-        position += movementSpeed * graphics.deltaTime * up;
+        position += speed * graphics.deltaTime * up;
         should_update = true;
     }
     if (glfwGetKey(glfw_window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) {
-        position += -movementSpeed * graphics.deltaTime * up;
+        position += -speed * graphics.deltaTime * up;
         should_update = true;
     }
     if (should_update) update();

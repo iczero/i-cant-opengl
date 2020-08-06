@@ -32,7 +32,8 @@ common = [
     'src/window.cpp',
     'src/graphics.cpp',
     'src/camera.cpp',
-    'src/geometry.cpp'
+    'src/geometry.cpp',
+    'src/NBody.cpp'
 ]
 
 cxxflags = []

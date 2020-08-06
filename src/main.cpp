@@ -7,6 +7,8 @@
 #include "window.hpp"
 #include "shaders.hpp"
 #include "geometry.hpp"
+#include "NBody.h"
+#include "Octree.h"
 
 constexpr int DEFAULT_WIDTH = 800;
 constexpr int DEFAULT_HEIGHT = 600;
@@ -60,19 +62,34 @@ int main() {
     Graphics &graphics = window.graphics;
 
     // create a sphere
-    IcosphereGeometry sphere_geometry(10);
+    IcosphereGeometry sphere_geometry(3);
+
+    // initialize simulation
+    NBody nbody;
+    nbody.randomly_generate_bodies(50);
 
     // main loop
     while (!window.should_close()) {
         graphics.camera.process_input();
+        float time = glfwGetTime();
+        Octree *tree = nbody.simulate_frame();
+        std::cout << "time for simulate_frame: " << glfwGetTime() - time << std::endl;
+        time = glfwGetTime();
 
         // render
         {
             graphics.begin_render();
-
+            for (auto *node : tree->allNodes) {
+                glm::vec3 pos(node->position.x, node->position.y, node->position.z);
+                pos /= 100.0f;
+                render_geometry_at(graphics, sphere_geometry, pos, node->mass / 100.0f);
+            }
+            std::cout << "time for render: " << glfwGetTime() - time << std::endl;
+            /*
             render_geometry_at(graphics, sphere_geometry, glm::vec3(0.0f, 0.0f, 0.0f), 1.0f, true);
             render_geometry_at(graphics, sphere_geometry, glm::vec3(5.0f, 6.0f, -7.0f), 1.5f, false);
             render_geometry_at(graphics, sphere_geometry, glm::vec3(-4.3f, 1.6f, -9.1f), 0.4, true);
+            */
         }
 
         window.frame_done();

@@ -2,6 +2,9 @@
 #include <glad/glad.h>
 #include <glm/glm.hpp>
 #include "shaders.hpp"
+#include "camera.hpp"
+
+class Window;
 
 // main shader
 class MainShaderProgram : public ShaderProgram {
@@ -13,21 +16,25 @@ public:
 
     MainShaderProgram();
     void init();
-    void set_color(glm::vec4 color);
-    void set_projection(glm::mat4 projection_matrix);
-    void set_view(glm::mat4 view_matrix);
-    void set_model(glm::mat4 model_matrix);
+    void set_color(glm::vec4 &color);
+    void set_projection(glm::mat4 &projection_matrix);
+    void set_view(glm::mat4 &view_matrix);
+    void set_model(glm::mat4 &model_matrix);
 };
 
 // extraordinarily simple graphics
 class Graphics {
 public:
-    MainShaderProgram main_shader;
+    Window &window;
     float fov;
     int viewport_width;
     int viewport_height;
+    MainShaderProgram main_shader;
+    Camera camera;
+    float lastFrameTime;
+    float deltaTime;
 
-    Graphics();
+    Graphics(Window &window);
     // initialize the instance
     void init();
     // update projection matrix with current values

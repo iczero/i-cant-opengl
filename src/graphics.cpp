@@ -2,8 +2,15 @@
 #include <stdexcept>
 #include <GLFW/glfw3.h>
 #include <glm/gtc/matrix_transform.hpp>
+#include "camera.hpp"
+#include "window.hpp"
 
-Graphics::Graphics(): fov(45.0f), viewport_width(0), viewport_height(0) {}
+Graphics::Graphics(Window &window):
+    window(window),
+    fov(45.0f),
+    viewport_width(0),
+    viewport_height(0),
+    camera(*this) {}
 
 void Graphics::init() {
     // gl configuration
@@ -15,6 +22,13 @@ void Graphics::init() {
 
     // wireframe drawing mode
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
+    // setup timekeeping
+    lastFrameTime = glfwGetTime();
+    deltaTime = 1.0f;
+
+    // setup camera
+    camera.update();
 }
 
 void Graphics::update_projection() {
@@ -55,6 +69,10 @@ void Graphics::set_fov(float fov) {
 }
 
 void Graphics::begin_render() {
+    float currentTime = glfwGetTime();
+    deltaTime = currentTime - lastFrameTime;
+    lastFrameTime = currentTime;
+
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     main_shader.use();
@@ -77,18 +95,18 @@ void MainShaderProgram::init() {
     uniform_model = get_uniform_location("model");
 }
 
-void MainShaderProgram::set_color(glm::vec4 color) {
+void MainShaderProgram::set_color(glm::vec4 &color) {
     set_uniform(uniform_color, color);
 }
 
-void MainShaderProgram::set_projection(glm::mat4 projection_matrix) {
+void MainShaderProgram::set_projection(glm::mat4 &projection_matrix) {
     set_uniform(uniform_projection, projection_matrix);
 }
 
-void MainShaderProgram::set_view(glm::mat4 view_matrix) {
+void MainShaderProgram::set_view(glm::mat4 &view_matrix) {
     set_uniform(uniform_view, view_matrix);
 }
 
-void MainShaderProgram::set_model(glm::mat4 model_matrix) {
+void MainShaderProgram::set_model(glm::mat4 &model_matrix) {
     set_uniform(uniform_model, model_matrix);
 }

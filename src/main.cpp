@@ -22,12 +22,6 @@ public:
     }
 };
 
-void process_input(GLFWwindow *window) {
-    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
-        glfwSetWindowShouldClose(window, true);
-    }
-}
-
 int main() {
     // initialize glfw
     GLFWGuard glfw_guard;
@@ -61,22 +55,15 @@ int main() {
 
     // main loop
     while (!window.should_close()) {
-        process_input(glfw_window);
+        graphics.camera.process_input();
 
         // render
         {
             graphics.begin_render();
 
-            // view transform
-            // TODO: dynamic camera
-            graphics.set_view(glm::lookAt(
-                glm::vec3(0.0f, 0.0f, 3.0f), // eye position
-                glm::vec3(0.0f, 0.0f, 0.0f), // where the camera is looking at
-                glm::vec3(0.0f, 1.0f, 0.0f) // up direction
-            ));
-
             // model transform
             glm::mat4 model = glm::mat4(1.0f);
+            model = glm::translate(model, glm::vec3(0.0f, 0.0f, 3.0f));
             model = glm::rotate(model, (float) glfwGetTime() * glm::radians(50.0f), glm::vec3(0.5f, 1.0f, 0.0f));
             graphics.set_model(model);
 

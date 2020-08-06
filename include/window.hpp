@@ -20,6 +20,10 @@ public:
 
     // glfw framebuffer size callback
     static void update_viewport_handler(GLFWwindow *window, int width, int height);
+    static void keyboard_input_handler(GLFWwindow *window, int key, int scancode, int action, int mods);
+    static void mouse_position_handler(GLFWwindow *window, double xpos, double ypos);
+    static void mouse_button_handler(GLFWwindow *window, int button, int action, int mods);
+
     // updates viewport width/height and recreates projection matrix
     void update_viewport(int width, int height);
     bool should_close();

@@ -22,6 +22,15 @@ public:
     }
 };
 
+void render_geometry_at(Graphics &graphics, Geometry &geometry, glm::vec3 position, float scale = 1.0f, bool spinny = false) {
+    glm::mat4 model = glm::mat4(1.0f);
+    model = glm::translate(model, position);
+    model = glm::scale(model, glm::vec3(scale, scale, scale));
+    if (spinny) model = glm::rotate(model, (float) glfwGetTime() * glm::radians(50.0f), glm::vec3(0.5f, 1.0f, 0.0f));
+    graphics.set_model(model);
+    geometry.draw();
+}
+
 int main() {
     // initialize glfw
     GLFWGuard glfw_guard;
@@ -61,13 +70,9 @@ int main() {
         {
             graphics.begin_render();
 
-            // model transform
-            glm::mat4 model = glm::mat4(1.0f);
-            model = glm::translate(model, glm::vec3(0.0f, 0.0f, 3.0f));
-            model = glm::rotate(model, (float) glfwGetTime() * glm::radians(50.0f), glm::vec3(0.5f, 1.0f, 0.0f));
-            graphics.set_model(model);
-
-            sphere_geometry.draw();
+            render_geometry_at(graphics, sphere_geometry, glm::vec3(0.0f, 0.0f, 0.0f), 1.0f, true);
+            render_geometry_at(graphics, sphere_geometry, glm::vec3(5.0f, 6.0f, -7.0f), 1.5f, false);
+            render_geometry_at(graphics, sphere_geometry, glm::vec3(-4.3f, 1.6f, -9.1f), 0.4, true);
         }
 
         window.frame_done();

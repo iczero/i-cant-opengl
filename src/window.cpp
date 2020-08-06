@@ -8,6 +8,7 @@ Window::Window(GLFWwindow *window): graphics(*this), window(window) {
     glfwSetKeyCallback(window, &Window::keyboard_input_handler);
     glfwSetCursorPosCallback(window, &Window::mouse_position_handler);
     glfwSetMouseButtonCallback(window, &Window::mouse_button_handler);
+    glfwSetScrollCallback(window, &Window::mouse_wheel_handler);
 }
 
 Window::~Window() {
@@ -33,6 +34,11 @@ void Window::mouse_position_handler(GLFWwindow *window, double xpos, double ypos
 void Window::mouse_button_handler(GLFWwindow *window, int button, int action, int mods) {
     Window *instance = static_cast<Window *>(glfwGetWindowUserPointer(window));
     instance->graphics.camera.handle_mouse_button(button, action, mods);
+}
+
+void Window::mouse_wheel_handler(GLFWwindow *window, double x_offset, double y_offset) {
+    Window *instance = static_cast<Window *>(glfwGetWindowUserPointer(window));
+    instance->graphics.camera.handle_mouse_wheel(x_offset, y_offset);
 }
 
 void Window::update_viewport(int width, int height) {

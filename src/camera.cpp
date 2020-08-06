@@ -99,13 +99,27 @@ void Camera::handle_mouse_position(double xpos, double ypos) {
 }
 
 void Camera::handle_mouse_button(int button, int action, int) {
-    if (button != GLFW_MOUSE_BUTTON_LEFT) return; // we don't handle anything else
     if (action != GLFW_PRESS) return;
     GLFWwindow *glfw_window = graphics.window.window;
-    if (!mouse_captured) {
-        mouse_captured = true;
-        glfwSetInputMode(glfw_window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-        // update initial cursor position
-        glfwGetCursorPos(glfw_window, &last_x, &last_y);
+    switch (button) {
+        case GLFW_MOUSE_BUTTON_LEFT: {
+            if (!mouse_captured) {
+                mouse_captured = true;
+                glfwSetInputMode(glfw_window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+                // update initial cursor position
+                glfwGetCursorPos(glfw_window, &last_x, &last_y);
+                // try enable raw input
+                if (glfwRawMouseMotionSupported()) {
+                    glfwSetInputMode(glfw_window, GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);
+                }
+            }
+            break;
+        }
     }
+}
+
+void Camera::handle_mouse_wheel(double, double y_offset) {
+    y_offset *= -10.0;
+    float fov = glm::clamp(graphics.fov + (float) y_offset, 15.0f, 75.0f);
+    graphics.set_fov(fov);
 }

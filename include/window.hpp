@@ -23,6 +23,7 @@ public:
     static void keyboard_input_handler(GLFWwindow *window, int key, int scancode, int action, int mods);
     static void mouse_position_handler(GLFWwindow *window, double xpos, double ypos);
     static void mouse_button_handler(GLFWwindow *window, int button, int action, int mods);
+    static void mouse_wheel_handler(GLFWwindow *window, double x_offset, double y_offset);
 
     // updates viewport width/height and recreates projection matrix
     void update_viewport(int width, int height);

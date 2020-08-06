@@ -36,4 +36,6 @@ public:
     void handle_mouse_position(double xpos, double ypos);
     // mouse button callback
     void handle_mouse_button(int button, int action, int mods);
+    // mouse wheel callback
+    void handle_mouse_wheel(double x_offset, double y_offset);
 };

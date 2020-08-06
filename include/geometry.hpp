@@ -16,7 +16,7 @@ public:
     unsigned int index_count;
 
     Geometry();
-    ~Geometry();
+    virtual ~Geometry();
 
     // bind vertex array
     void bind();
@@ -25,6 +25,9 @@ public:
     // bind buffers
     void bind_buffers();
     void unbind_buffers();
+
+    // draw function
+    virtual void draw() = 0;
 };
 
 class CubeGeometry : public Geometry {

@@ -3,7 +3,7 @@
 #include <GLFW/glfw3.h>
 #include <glm/gtc/matrix_transform.hpp>
 
-Graphics::Graphics() {}
+Graphics::Graphics(): fov(45.0f), viewport_width(0), viewport_height(0) {}
 
 void Graphics::init() {
     // gl configuration
@@ -11,17 +11,27 @@ void Graphics::init() {
 
     // initialize shaders
     main_shader.init();
-    draw_color(glm::vec4(0.0f, 1.0f, 1.0f, 1.0f));
+    set_color(glm::vec4(0.0f, 1.0f, 1.0f, 1.0f));
 
     // wireframe drawing mode
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 }
 
-void Graphics::update_viewport(int width, int height) {
-    glViewport(0, 0, width, height);
-    glm::mat4 projection = glm::perspective(glm::radians(45.0f), (float) width / height, 0.1f, 100.0f);
+void Graphics::update_projection() {
+    glm::mat4 projection = glm::perspective(
+        glm::radians(fov),
+        (float) viewport_width / viewport_height,
+        0.1f, 100.0f
+    );
     main_shader.use();
     main_shader.set_projection(projection);
+}
+
+void Graphics::update_viewport(int width, int height) {
+    viewport_width = width;
+    viewport_height = height;
+    glViewport(0, 0, width, height);
+    update_projection();
 }
 
 void Graphics::set_color(glm::vec4 color) {
@@ -37,6 +47,11 @@ void Graphics::set_view(glm::mat4 view_transform) {
 void Graphics::set_model(glm::mat4 model_transform) {
     main_shader.use();
     main_shader.set_model(model_transform);
+}
+
+void Graphics::set_fov(float fov) {
+    this->fov = fov;
+    update_projection();
 }
 
 void Graphics::begin_render() {

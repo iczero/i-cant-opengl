@@ -23,13 +23,25 @@ public:
 class Graphics {
 public:
     MainShaderProgram main_shader;
+    float fov;
+    int viewport_width;
+    int viewport_height;
 
     Graphics();
+    // initialize the instance
     void init();
+    // update projection matrix with current values
+    void update_projection();
+    // update viewport size
     void update_viewport(int width, int height);
+    // set draw color
     void set_color(glm::vec4 color);
+    // set view matrix
     void set_view(glm::mat4 view_transform);
+    // set model matrix
     void set_model(glm::mat4 model_transform);
+    // set fov, in degrees
+    void set_fov(float fov);
+    // call to begin rendering frame
     void begin_render();
-    void render_geometry(unsigned int vao);
 };

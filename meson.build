@@ -29,7 +29,6 @@ dependencies = [
 include = include_directories('include')
 common = [
     'src/shaders.cpp',
-    'src/sphere.cpp',
     'src/window.cpp',
     'src/graphics.cpp',
     'src/camera.cpp',

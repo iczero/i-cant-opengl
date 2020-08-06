@@ -55,9 +55,9 @@ int main() {
     Window window(glfw_window);
     window.update_viewport(DEFAULT_WIDTH, DEFAULT_HEIGHT);
     Graphics &graphics = window.graphics;
-    
-    // create a cube
-    CubeGeometry cube_geometry(0.5f);
+
+    // create a sphere
+    IcosphereGeometry sphere_geometry(10);
 
     // main loop
     while (!window.should_close()) {
@@ -77,11 +77,10 @@ int main() {
 
             // model transform
             glm::mat4 model = glm::mat4(1.0f);
-            // model = glm::translate(model, glm::vec3(0.0f, 0.0f, -3.0f));
             model = glm::rotate(model, (float) glfwGetTime() * glm::radians(50.0f), glm::vec3(0.5f, 1.0f, 0.0f));
             graphics.set_model(model);
 
-            cube_geometry.draw();
+            sphere_geometry.draw();
         }
 
         window.frame_done();

@@ -90,6 +90,14 @@ NBody::NBody() {
     m_bodies = tree;
 }
 
+// a hack for better random on windows
+#ifdef _WIN32
+int more_rand() {
+    return rand() * rand();
+}
+#define rand more_rand
+#endif
+
 void NBody::randomly_generate_bodies(int count)
 {
     for (int i=0; i < count; i++) { // was 10000

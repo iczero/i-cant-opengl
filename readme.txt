@@ -31,6 +31,8 @@ around. Hit Escape to release the mouse. Hit Escape again to exit the
 application.
 Use W/A/S/D to move around and Space/Left Shift to move up and down respectively.
 Hold Left Control to move faster.
+Press R to run and pause the simulation. Press and hold F to step the simulation.
+Press G to add new objects randomly.
 
 
 This application was written for COP3503 (Data Structures and Algorithms).

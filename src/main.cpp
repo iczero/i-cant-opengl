@@ -66,30 +66,35 @@ int main() {
 
     // initialize simulation
     NBody nbody;
-    nbody.randomly_generate_bodies(50);
+    nbody.randomly_generate_bodies(100);
+    nbody.simulate_frame();
+    Octree &tree = *nbody.m_bodies;
+
+    auto i = 0U;
 
     // main loop
     while (!window.should_close()) {
+        // if (i++ > 5) window.close();
         graphics.camera.process_input();
         float time = glfwGetTime();
-        Octree *tree = nbody.simulate_frame();
+        if (glfwGetKey(glfw_window, GLFW_KEY_R) == GLFW_PRESS) nbody.simulate_frame();
         std::cout << "time for simulate_frame: " << glfwGetTime() - time << std::endl;
         time = glfwGetTime();
 
         // render
         {
             graphics.begin_render();
-            for (auto *node : tree->allNodes) {
+            for (auto *node : tree.allNodes) {
                 glm::vec3 pos(node->position.x, node->position.y, node->position.z);
-                pos /= 100.0f;
-                render_geometry_at(graphics, sphere_geometry, pos, node->mass / 100.0f);
+                pos /= 10.0f;
+                float radius = node->mass / 1e13;
+                render_geometry_at(graphics, sphere_geometry, pos, radius);
             }
             std::cout << "time for render: " << glfwGetTime() - time << std::endl;
-            /*
-            render_geometry_at(graphics, sphere_geometry, glm::vec3(0.0f, 0.0f, 0.0f), 1.0f, true);
-            render_geometry_at(graphics, sphere_geometry, glm::vec3(5.0f, 6.0f, -7.0f), 1.5f, false);
-            render_geometry_at(graphics, sphere_geometry, glm::vec3(-4.3f, 1.6f, -9.1f), 0.4, true);
-            */
+            
+            // render_geometry_at(graphics, sphere_geometry, glm::vec3(0.0f, 0.0f, 0.0f), 1.0f, true);
+            // render_geometry_at(graphics, sphere_geometry, glm::vec3(5.0f, 6.0f, -7.0f), 1.5f, false);
+            // render_geometry_at(graphics, sphere_geometry, glm::vec3(-4.3f, 1.6f, -9.1f), 0.4, true);
         }
 
         window.frame_done();

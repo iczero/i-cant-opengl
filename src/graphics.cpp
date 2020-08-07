@@ -35,7 +35,7 @@ void Graphics::update_projection() {
     glm::mat4 projection = glm::perspective(
         glm::radians(fov),
         (float) viewport_width / viewport_height,
-        0.1f, 1000.0f
+        0.1f, 10000.0f
     );
     main_shader.use();
     main_shader.set_projection(projection);

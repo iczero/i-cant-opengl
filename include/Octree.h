@@ -18,7 +18,7 @@ using namespace std;
 
 struct Vec3
 {
-	float x, y, z;
+	double x, y, z;
 	Vec3()
 	{
 		x, y, z = -1;
@@ -29,18 +29,18 @@ struct Vec3
 		y = other.y;
 		z = other.z;
 	}
-	Vec3(float x, float y, float z)
+	Vec3(double x, double y, double z)
 	{
 		this->x = x;
 		this->y = y;
 		this->z = z;
 	}
 	
-	operator float* ()
+	operator double* ()
 	{
 		return &x;
 	}
-	operator const float* () const
+	operator const double* () const
 	{
 		return &x;
 	}
@@ -70,15 +70,29 @@ struct Vec3
         z += other.z;
         return *this;
     }
+	Vec3& operator-=(Vec3& other)
+    {
+        x -= other.x;
+        y -= other.y;
+        z -= other.z;
+        return *this;
+    }
+	Vec3& operator-=(Vec3&& other)
+    {
+        x -= other.x;
+        y -= other.y;
+        z -= other.z;
+        return *this;
+    }
 	Vec3 operator-(Vec3& other) const
 	{
 		return Vec3(x - other.x, y - other.y, z - other.z);
 	}
-	Vec3 operator*(float other) const
+	Vec3 operator*(double other) const
 	{
 		return Vec3(x * other, y * other, z * other);
 	}
-	Vec3 operator/(float other) const
+	Vec3 operator/(double other) const
 	{
 		return Vec3(x / other, y / other, z / other);
 	}
@@ -105,17 +119,20 @@ struct Vec3
 	}
 
 	// Dot Product
-	float operator*(const Vec3& other) const
+	double operator*(const Vec3& other) const
 	{
 		return x * other.x + y * other.y + z * other.z;
 	}
-	float norm() const
+	double magnitude() const
 	{
 		return sqrtf(x * x + y * y + z * z);
 	}
-	float normSquared() const
+	double magnitudeSquared() const
 	{
 		return x * x + y * y + z * z;
+	}
+	Vec3 normalize() const {
+		return *this / magnitude();
 	}
 };
 
@@ -125,8 +142,8 @@ struct OctreeNode
 	Vec3 velocity;
     Vec3 acceleration;
 	Vec3 force;
-	float radius;
-	float mass;
+	double radius;
+	double mass;
 
 	// Constructors
 	OctreeNode() {	}
@@ -136,7 +153,7 @@ struct OctreeNode
 		this->velocity = velocity;
 		this->force = force;
 	}
-	OctreeNode(Vec3 position, Vec3 velocity, Vec3 force, float radius, float mass)
+	OctreeNode(Vec3 position, Vec3 velocity, Vec3 force, double radius, double mass)
 	{
 		this->position = position;
 		this->velocity = velocity;
@@ -313,6 +330,16 @@ public:
 	// insert node into tree
 	void insert(OctreeNode* node)
 	{
+		// check if node is out of bounds 
+		if (   node->position.x < (origin->x - halfDim->x) || node->position.x >(origin->x + halfDim->x)
+			|| node->position.y < (origin->y - halfDim->y) || node->position.y >(origin->y + halfDim->y)
+			|| node->position.z < (origin->z - halfDim->z) || node->position.z >(origin->z + halfDim->z))
+		{
+			std::cerr << "warning: not inserting out of range node at " <<
+				node->position.x << " " << node->position.y << " " << node->position.z << std::endl;
+			return;
+		}
+
 		// check if it node not in vector
 		if (find(allNodes.begin(), allNodes.end(), node) == allNodes.end()) 
 		{
@@ -321,14 +348,6 @@ public:
 		
 		// check if node exists
 		if (nodeExists(node))
-		{
-			return;
-		}
-		
-		// check if node is out of bounds 
-		if (   node->position.x < (origin->x - halfDim->x) || node->position.x >(origin->x + halfDim->x)
-			|| node->position.y < (origin->y - halfDim->y) || node->position.y >(origin->y + halfDim->y)
-			|| node->position.z < (origin->z - halfDim->z) || node->position.z >(origin->z + halfDim->z))
 		{
 			return;
 		}

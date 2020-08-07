@@ -8,18 +8,20 @@ using std::string;
 
 class NBody {
 public:
+    Octree* m_bodies;
+
     NBody()
     {
         OctreeNode* node = new OctreeNode();
-        Vec3* half = new Vec3(50, 50, 50);
-        Vec3* origin = new Vec3(50, 50, 50);
+        Vec3* half = new Vec3(10000, 10000, 10000);
+        Vec3* origin = new Vec3(0, 0, 0);
         Octree* tree = new Octree(node, half, origin);
         m_bodies = tree;
 
     }
     struct Vec3FloatPair {
         Vec3 vec3;
-        float num;
+        double num;
         Vec3FloatPair& operator+=(Vec3FloatPair pair)
         {
             vec3 += pair.vec3;
@@ -33,17 +35,7 @@ public:
     static Vec3 calculate_force(OctreeNode*, OctreeNode&&);
     static Vec3 calculate_force(OctreeNode*, OctreeNode*);
     static Vec3 calculate_center_of_mass(Octree*);
-    static void update_position(OctreeNode*);
+    static void update_position(OctreeNode*, double time = 1.0);
     Octree* simulate_frame();
     void print();
-
-
-
-
-
-
-
-
-private:
-    Octree* m_bodies;
 };

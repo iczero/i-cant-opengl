@@ -165,7 +165,20 @@ bool Octree::remove(OctreeNode* node) {
         } else return false;
     } else {
         int target_octant = getOctant(node->position);
-        if (!children[target_octant]) return false;
+        if (!children[target_octant]) {
+            // getOctant has accuracy problems sometimes????
+            // try using node->parent instead
+            if (!node->parent) return false;
+            bool fallback_succeeded = false;
+            for (auto i = 0U; i < 8; i++) {
+                if (node->parent == children[i]) {
+                    target_octant = i;
+                    fallback_succeeded = true;
+                    break;
+                }
+            }
+            if (!fallback_succeeded) return false;
+        }
         if (children[target_octant]->remove(node)) {
             // removed successfully, check if node is now empty
             if (!has_children()) remove_self();
@@ -205,7 +218,7 @@ void Octree::reinsert_at(OctreeNode *node, glm::dvec3 new_position) {
     }
 
     // remove and reinsert
-    if (!remove(node)) throw std::runtime_error("remove failed?");
+    if (!remove(node)) std::cerr << "warning: reinsert failed to remove old node" << std::endl;
     node->position = new_position;
     insert(node);
 }

@@ -9,7 +9,7 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/build/main",
-            "args": [],
+            "args": ["generate", "250"],
             "stopAtEntry": true,
             "cwd": "${workspaceFolder}",
             "environment": [],

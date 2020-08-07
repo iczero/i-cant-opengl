@@ -7,11 +7,11 @@
 #include "window.hpp"
 #include "shaders.hpp"
 #include "geometry.hpp"
-#include "NBody.h"
-#include "Octree.h"
+#include "NBody.hpp"
+#include "octree.hpp"
 
-constexpr int DEFAULT_WIDTH = 800;
-constexpr int DEFAULT_HEIGHT = 600;
+constexpr int DEFAULT_WIDTH = 1920;
+constexpr int DEFAULT_HEIGHT = 1080;
 
 // why terminate stuff manually when c++ can do it for you!
 class GLFWGuard {
@@ -70,31 +70,26 @@ int main() {
     nbody.simulate_frame();
     Octree &tree = *nbody.m_bodies;
 
-    auto i = 0U;
-
     // main loop
     while (!window.should_close()) {
-        // if (i++ > 5) window.close();
         graphics.camera.process_input();
         float time = glfwGetTime();
         if (glfwGetKey(glfw_window, GLFW_KEY_R) == GLFW_PRESS) nbody.simulate_frame();
-        std::cout << "time for simulate_frame: " << glfwGetTime() - time << std::endl;
+        if (glfwGetKey(glfw_window, GLFW_KEY_F) == GLFW_PRESS) nbody.randomly_generate_bodies(1);
+        // std::cout << "time for simulate_frame: " << glfwGetTime() - time << std::endl;
         time = glfwGetTime();
 
         // render
         {
             graphics.begin_render();
-            for (auto *node : tree.allNodes) {
-                glm::vec3 pos(node->position.x, node->position.y, node->position.z);
+            for (auto &node : tree) {
+                glm::vec3 pos(node.position.x, node.position.y, node.position.z);
+                // TODO: fix hardcoded scale somehow
                 pos /= 10.0f;
-                float radius = node->mass / 1e13;
+                float radius = node.mass / 1e13;
                 render_geometry_at(graphics, sphere_geometry, pos, radius);
             }
-            std::cout << "time for render: " << glfwGetTime() - time << std::endl;
-            
-            // render_geometry_at(graphics, sphere_geometry, glm::vec3(0.0f, 0.0f, 0.0f), 1.0f, true);
-            // render_geometry_at(graphics, sphere_geometry, glm::vec3(5.0f, 6.0f, -7.0f), 1.5f, false);
-            // render_geometry_at(graphics, sphere_geometry, glm::vec3(-4.3f, 1.6f, -9.1f), 0.4, true);
+            // std::cout << "time for render: " << glfwGetTime() - time << std::endl;
         }
 
         window.frame_done();

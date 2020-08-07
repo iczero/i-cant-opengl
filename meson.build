@@ -33,7 +33,8 @@ common = [
     'src/graphics.cpp',
     'src/camera.cpp',
     'src/geometry.cpp',
-    'src/NBody.cpp'
+    'src/NBody.cpp',
+    'src/octree.cpp'
 ]
 
 cxxflags = []

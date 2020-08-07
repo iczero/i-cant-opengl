@@ -2,8 +2,8 @@
 #include <fstream>
 #include <string>
 #include <stdlib.h>
-#include "NBody.h"
-#include "Octree.h"
+#include "NBody.hpp"
+#include "octree.hpp"
 
 void NBody::read_bodies_from_csv(const char* file_name)
 {
@@ -84,18 +84,12 @@ void NBody::read_bodies_from_csv(const char* file_name)
         double mass = stod(mass_string);
         mass_string.clear();
         i++;
-
-        string radius_string;
-        for (; i < line.size(); i++)
-            radius_string.push_back(line[i]);
-        double radius = stod(radius_string);
-        radius_string.clear();
         
-        Vec3 position_vec = Vec3 { x_coordinate, y_coordinate, z_coordinate };
-        Vec3 velocity_vec = Vec3 { x_velocity, y_velocity, z_velocity };
-        Vec3 force_vec = Vec3 { x_force, y_force, z_force };
+        glm::dvec3 position_vec = glm::dvec3 { x_coordinate, y_coordinate, z_coordinate };
+        glm::dvec3 velocity_vec = glm::dvec3 { x_velocity, y_velocity, z_velocity };
+        glm::dvec3 force_vec = glm::dvec3 { x_force, y_force, z_force };
 
-        m_bodies->insert(new OctreeNode { position_vec, velocity_vec, force_vec, mass, radius});
+        m_bodies->insert(new OctreeNode(position_vec, velocity_vec, force_vec, mass));
 
         i = 0;
     }
@@ -109,24 +103,28 @@ void NBody::read_bodies_from_csv(const char* file_name)
     */
 }
 
+NBody::NBody() {
+    glm::dvec3 half(10000, 10000, 10000);
+    glm::dvec3 origin(0, 0, 0);
+    Octree* tree = new Octree(nullptr, half, origin);
+    m_bodies = tree;
+}
+
 void NBody::randomly_generate_bodies(int count)
 {
     void *nothing = malloc(1);
     srand((unsigned long long)nothing); // Lol
     free(nothing);
     for (int i=0; i < count; i++) { // was 10000
-        Vec3 position_vec = Vec3 {
+        glm::dvec3 position_vec = glm::dvec3 {
             (double)(rand() % 10000) / (double)10 - 500,
             (double)(rand() % 10000) / (double)10 - 500,
             (double)(rand() % 10000) / (double)10 - 500 };
-        /*
-        Vec3 velocity_vec = Vec3 {
-            (double)(rand() % 1000) / (double)10 - 50,
-            (double)(rand() % 1000) / (double)10 - 50,
-            (double)(rand() % 1000) / (double)10 - 50 };
-        */
-        Vec3 velocity_vec = Vec3(0, 0, 0);
-        Vec3 force_vec = Vec3(0, 0, 0);
+        glm::dvec3 velocity_vec = glm::dvec3 {
+            (double)(rand() % 100) / (double)10 - 5,
+            (double)(rand() % 100) / (double)10 - 5,
+            (double)(rand() % 100) / (double)10 - 5 };
+        glm::dvec3 force_vec = glm::dvec3(0, 0, 0);
 
         /* in case new templates need to be created
         std::cout << position_vec.x
@@ -142,8 +140,7 @@ void NBody::randomly_generate_bodies(int count)
                   << ',' << (double)(rand() % 1000) / (double)10 - 50 << '\n';
         */
 
-        // m_bodies->insert(new OctreeNode { position_vec, velocity_vec, force_vec, (double)(rand() % 1000) / (double)10 - 50, (double)(rand() % 1000) / (double)10 - 50 });
-        m_bodies->insert(new OctreeNode { position_vec, velocity_vec, force_vec, (double)(rand() % 1000) / (double)10, (double)(rand() % 100000) * 1e9 });
+        m_bodies->insert(new OctreeNode(position_vec, velocity_vec, force_vec, (double)(rand() % 100000) * 1e9));
     }
 }
 
@@ -153,13 +150,13 @@ void NBody::print()
 }
 
 struct TwoSums {
-    Vec3 sum1;
+    glm::dvec3 sum1;
     double sum2;
 };
 NBody::Vec3FloatPair calculate_center_of_mass_helper(Octree* tree)
 {
     NBody::Vec3FloatPair sums = { { 0, 0, 0 }, 1 };
-    for (int i=0; i < 8; i++) {
+    for (int i = 0; i < 8; i++) {
         if (!tree->getChildren()[i])
             continue;
         if (!tree->getChildren()[i]->isLeafNode()) {
@@ -175,7 +172,7 @@ NBody::Vec3FloatPair calculate_center_of_mass_helper(Octree* tree)
 }
 
 
-Vec3 NBody::calculate_center_of_mass(Octree* tree) // very segfaulty
+glm::dvec3 NBody::calculate_center_of_mass(Octree* tree) // very segfaulty
 {
     NBody::Vec3FloatPair result = calculate_center_of_mass_helper(tree);
     return result.vec3 / result.num;
@@ -184,7 +181,7 @@ Vec3 NBody::calculate_center_of_mass(Octree* tree) // very segfaulty
 double mass_from_body_cluster(Octree* tree) // Probably segfaulty
 {
     double sum = 0;
-    for (int i=0; i < 8; i++) {
+    for (int i = 0; i < 8; i++) {
         if (!tree->getChildren()[i])
             continue;
         if (!tree->getChildren()[i]->isLeafNode()) {
@@ -197,79 +194,70 @@ double mass_from_body_cluster(Octree* tree) // Probably segfaulty
     return sum;
 }
 
-Vec3 NBody::calculate_force(OctreeNode* node_a, OctreeNode&& node_b)
+glm::dvec3 NBody::calculate_force(OctreeNode* node_a, OctreeNode&& node_b)
 {
     if (!node_a)
         std::cout << "Sad face from calculate_force*&& :(\n";
 
-    Vec3 diff = node_b.position - node_a->position;
-    return diff.normalize() * (6.67408e-11 * node_a->mass * node_b.mass) / pow(diff.magnitude(), 2);
-    /*
-    return Vec3 { (6.674e-11 * node_a->mass * node_b.mass) / sqrt((node_a->position.x - node_b.position.x) - (node_a->radius + node_b.radius)),
-                  (6.674e-11 * node_a->mass * node_b.mass) / sqrt((node_a->position.y - node_b.position.y) - (node_a->radius + node_b.radius)),
-                  (6.674e-11 * node_a->mass * node_b.mass) / sqrt((node_a->position.z - node_b.position.z) - (node_a->radius + node_b.radius)) };
-    */
+    glm::dvec3 diff = node_b.position - node_a->position;
+    return glm::normalize(diff) * (6.67408e-11 * node_a->mass * node_b.mass) / pow(glm::length(diff), 2);
 }
-Vec3 NBody::calculate_force(OctreeNode* node_a, OctreeNode* node_b)
+glm::dvec3 NBody::calculate_force(OctreeNode* node_a, OctreeNode* node_b)
 {
     if (!node_a || !node_b)
         std::cout << "Sad face from calculate_force** :(\n";
-    Vec3 diff = node_b->position - node_a->position;
-    return diff.normalize() * (6.67408e-11 * node_a->mass * node_b->mass) / pow(diff.magnitude(), 2);
-    /*
-    return Vec3 { (6.674e-11 * node_a->mass * node_b->mass) / sqrt((node_a->position.x - node_b->position.x) - (node_a->radius + node_b->radius)),
-                  (6.674e-11 * node_a->mass * node_b->mass) / sqrt((node_a->position.y - node_b->position.y) - (node_a->radius + node_b->radius)),
-                  (6.674e-11 * node_a->mass * node_b->mass) / sqrt((node_a->position.z - node_b->position.z) - (node_a->radius + node_b->radius)) };
-    */
+    glm::dvec3 diff = node_b->position - node_a->position;
+    return glm::normalize(diff) * (6.67408e-11 * node_a->mass * node_b->mass) / pow(glm::length(diff), 2);
 }
 void NBody::calculate_force_and_acceleration(Octree* tree, OctreeNode* node)
 {
-    if (!node || tree->getData() == node || !tree || (!tree->getData() && tree->isLeafNode())) {
+    if (!node || !tree || tree->getData() == node || (!tree->getData() && tree->isLeafNode())) {
         return;
     }
     if (tree->isLeafNode()) {
-        // std::cout << "calculated force: " << calculate_force(tree->getData(), node).x << std::endl;
         node->force -= calculate_force(tree->getData(), node);
         return;
     }
-    int octant = (m_bodies->getOctant(&node->position) + 8) / 8;
+    int octant = (m_bodies->getOctant(node->position) + 8) / 8;
     double octant_width = 1000 / octant; // 1000 is the hardcoded width of the head octant. Change this to be setable by the user?
-    Vec3 center_of_mass = calculate_center_of_mass(tree);
-    Vec3 distance = center_of_mass - node->position;
+    glm::dvec3 center_of_mass = calculate_center_of_mass(tree);
+    glm::dvec3 distance = center_of_mass - node->position;
 
-    if (octant_width / distance.magnitude() < 0.5) { // then can be treated as a single body
-        node->force -= calculate_force(node, OctreeNode { center_of_mass, node->velocity, node->force, 0, mass_from_body_cluster(tree) });
-        m_bodies->remove(node);
-        m_bodies->insert(node);
+    if (octant_width / glm::length(distance) < 0.5) { // then can be treated as a single body
+        node->force -= calculate_force(node, OctreeNode(center_of_mass, node->velocity, node->force, mass_from_body_cluster(tree)));
         return;
-    }
-    else 
-        for (int i=0; i < 8; i++)
+    } else {
+        for (int i = 0; i < 8; i++) {
             calculate_force_and_acceleration(tree->getChildren()[i], node);
+        }
+    }
 }
 
-void NBody::update_position(OctreeNode* node, double time)
+void NBody::update_position(OctreeNode &node, double time)
 {
-    node->acceleration = Vec3(
-        node->force.x / node->mass,
-        node->force.y / node->mass,
-        node->force.z / node->mass
+    node.acceleration = glm::dvec3(
+        node.force.x / node.mass,
+        node.force.y / node.mass,
+        node.force.z / node.mass
     );
-    node->velocity += node->acceleration * time;
-    node->position += node->velocity * time;
-    // std::cout << "force: " << node->force.x << " " << node->force.y << " " << node->force.z << std::endl;
-    node->force.x = 0;
-    node->force.y = 0;
-    node->force.z = 0;
+    node.velocity += node.acceleration * time;
+    glm::vec3 new_position = node.position + (node.velocity * time);
+    m_bodies->reinsert_at(&node, new_position);
+    node.force.x = 0;
+    node.force.y = 0;
+    node.force.z = 0;
 }
 
 Octree* NBody::simulate_frame() // Should return the whole octree so it can be displayed by OpenGL
 {
-    for (auto *node : m_bodies->allNodes)
-        calculate_force_and_acceleration(m_bodies, node); // only if node is a body. Figure that out.
+    // move into vector as tree should not change while iterating
+    std::vector<OctreeNode *> position_updates_vector;
+    for (auto &node : *m_bodies) {
+        calculate_force_and_acceleration(m_bodies, &node); // only if node is a body. Figure that out.
+        position_updates_vector.push_back(&node);
+    }
 
-    for (auto *node : m_bodies->allNodes)
-        update_position(node, 1.0);
+    for (auto *node : position_updates_vector) update_position(*node);
     return m_bodies;
 }
 

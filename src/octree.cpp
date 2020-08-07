@@ -88,7 +88,9 @@ bool Octree::insert(OctreeNode *node) {
             throw std::logic_error("attempted to reinsert the same node twice!");
         }
         if (data->position == node->position) {
-            throw std::runtime_error("two nodes with identical positions exist");
+            // throw std::runtime_error("two nodes with identical positions exist");
+            std::cerr << "warning: attempted to insert 2 nodes at the same position" << std::endl;
+            return false;
         }
 
         // convert to internal node

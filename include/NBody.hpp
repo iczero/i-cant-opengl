@@ -15,12 +15,7 @@ public:
     struct Vec3FloatPair {
         glm::dvec3 vec3;
         double num;
-        Vec3FloatPair& operator+=(Vec3FloatPair pair)
-        {
-            vec3 += pair.vec3;
-            num += pair.num;
-            return *this;
-        }
+        Vec3FloatPair& operator+=(Vec3FloatPair pair);
     };
     void read_bodies_from_csv(const char* file_name);
     void randomly_generate_bodies(int count);

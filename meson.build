@@ -2,7 +2,7 @@ project(
     'opengl-test',
     'cpp',
     version: '1',
-    default_options: ['buildtype=debug', 'warning_level=3']
+    default_options: ['buildtype=debug', 'warning_level=3', 'cpp_std=c++17']
 )
 
 cmake = import('cmake')

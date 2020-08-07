@@ -19,6 +19,8 @@ public:
     double last_x;
     double last_y;
 
+    bool run_simulation;
+
     Graphics &graphics;
 
     Camera(Graphics &graphics);

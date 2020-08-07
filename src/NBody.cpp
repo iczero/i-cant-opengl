@@ -7,12 +7,12 @@
 
 void NBody::read_bodies_from_csv(const char* file_name)
 {
-    //std::cout << "Do I even start?\n";
     std::ifstream csv_file(file_name);
+    if (!csv_file) throw std::runtime_error("failed to load csv file");
     string line;
     getline(csv_file, line);
     int i = 0;
-    for (; getline(csv_file, line);) {
+    do {
         string x_coordinate_string;
         for (; line[i] != ','; i++)
             x_coordinate_string.push_back(line[i]);
@@ -57,42 +57,22 @@ void NBody::read_bodies_from_csv(const char* file_name)
         i++;
 
 
-        string x_force_string;
-        for (; line[i] != ','; i++)
-            x_force_string.push_back(line[i]);
-        double x_force = stod(x_force_string);
-        x_force_string.clear();
-        i++;
-
-        string y_force_string;
-        for (; line[i] != ','; i++)
-            y_force_string.push_back(line[i]);
-        double y_force = stod(y_force_string);
-        y_force_string.clear();
-        i++;
-
-        string z_force_string;
-        for (; line[i] != ','; i++)
-            z_force_string.push_back(line[i]);
-        double z_force = stod(z_force_string);
-        z_force_string.clear();
-        i++;
-
         string mass_string;
         for (; line[i] != ','; i++)
             mass_string.push_back(line[i]);
-        double mass = stod(mass_string);
+        // multiply by 1e10 as otherwise they will be to small to be rendered
+        double mass = stod(mass_string) * 1e10;
         mass_string.clear();
         i++;
         
         glm::dvec3 position_vec = glm::dvec3 { x_coordinate, y_coordinate, z_coordinate };
         glm::dvec3 velocity_vec = glm::dvec3 { x_velocity, y_velocity, z_velocity };
-        glm::dvec3 force_vec = glm::dvec3 { x_force, y_force, z_force };
+        glm::dvec3 force_vec = glm::dvec3 { 0, 0, 0 };
 
         m_bodies->insert(new OctreeNode(position_vec, velocity_vec, force_vec, mass));
 
         i = 0;
-    }
+    } while (getline(csv_file, line));
     /*
     for (int i=0; i < m_bodies.size(); i++) {
         std::cout << "x-coord: " << m_bodies[i].x_coordinate
@@ -112,14 +92,11 @@ NBody::NBody() {
 
 void NBody::randomly_generate_bodies(int count)
 {
-    void *nothing = malloc(1);
-    srand((unsigned long long)nothing); // Lol
-    free(nothing);
     for (int i=0; i < count; i++) { // was 10000
         glm::dvec3 position_vec = glm::dvec3 {
-            (double)(rand() % 10000) / (double)10 - 500,
-            (double)(rand() % 10000) / (double)10 - 500,
-            (double)(rand() % 10000) / (double)10 - 500 };
+            (double)(rand() % 100000) / (double)10 - 5000,
+            (double)(rand() % 100000) / (double)10 - 5000,
+            (double)(rand() % 100000) / (double)10 - 5000 };
         glm::dvec3 velocity_vec = glm::dvec3 {
             (double)(rand() % 100) / (double)10 - 5,
             (double)(rand() % 100) / (double)10 - 5,
@@ -153,6 +130,13 @@ struct TwoSums {
     glm::dvec3 sum1;
     double sum2;
 };
+
+NBody::Vec3FloatPair& NBody::Vec3FloatPair::operator+=(Vec3FloatPair pair) {
+    vec3 += pair.vec3;
+    num += pair.num;
+    return *this;
+}
+    
 NBody::Vec3FloatPair calculate_center_of_mass_helper(Octree* tree)
 {
     NBody::Vec3FloatPair sums = { { 0, 0, 0 }, 1 };
@@ -198,7 +182,6 @@ glm::dvec3 NBody::calculate_force(OctreeNode* node_a, OctreeNode&& node_b)
 {
     if (!node_a)
         std::cout << "Sad face from calculate_force*&& :(\n";
-
     glm::dvec3 diff = node_b.position - node_a->position;
     return glm::normalize(diff) * (6.67408e-11 * node_a->mass * node_b.mass) / pow(glm::length(diff), 2);
 }
@@ -224,7 +207,7 @@ void NBody::calculate_force_and_acceleration(Octree* tree, OctreeNode* node)
     glm::dvec3 distance = center_of_mass - node->position;
 
     if (octant_width / glm::length(distance) < 0.5) { // then can be treated as a single body
-        node->force -= calculate_force(node, OctreeNode(center_of_mass, node->velocity, node->force, mass_from_body_cluster(tree)));
+        node->force += calculate_force(node, OctreeNode(center_of_mass, node->velocity, node->force, mass_from_body_cluster(tree)));
         return;
     } else {
         for (int i = 0; i < 8; i++) {
@@ -241,6 +224,8 @@ void NBody::update_position(OctreeNode &node, double time)
         node.force.z / node.mass
     );
     node.velocity += node.acceleration * time;
+    // std::cerr << "update_position: acceleration (" << node.acceleration.x << ", " << node.acceleration.y << ", " << node.acceleration.z << ")" << std::endl;
+    // std::cerr << "update_position: velocity (" << node.velocity.x << ", " << node.velocity.y << ", " << node.velocity.z << ")" << std::endl;
     glm::vec3 new_position = node.position + (node.velocity * time);
     m_bodies->reinsert_at(&node, new_position);
     node.force.x = 0;
@@ -260,20 +245,3 @@ Octree* NBody::simulate_frame() // Should return the whole octree so it can be d
     for (auto *node : position_updates_vector) update_position(*node);
     return m_bodies;
 }
-
-/*
-int main(int argc, char** argv)
-{
-    NBody nbody;
-    if (argc == 1)
-        nbody.randomly_generate_bodies();
-    else
-        for (int i = 1; i < argc; i++)
-            nbody.read_bodies_from_csv(argv[i]);
-    std::cout << "Finished sucking up data\n";
-    //nbody.print();
-    for (int i=0; i < 100; i++) {
-        nbody.simulate_frame();
-    }
-}
-*/

@@ -1,4 +1,5 @@
 #include <iostream>
+#include <string_view>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
@@ -9,6 +10,8 @@
 #include "geometry.hpp"
 #include "NBody.hpp"
 #include "octree.hpp"
+
+using namespace std::literals;
 
 constexpr int DEFAULT_WIDTH = 1920;
 constexpr int DEFAULT_HEIGHT = 1080;
@@ -33,7 +36,13 @@ void render_geometry_at(Graphics &graphics, Geometry &geometry, glm::vec3 positi
     geometry.draw();
 }
 
-int main() {
+int main(int argc, char **argv) {
+    if (argc < 2) {
+        std::cerr << "Not enough arguments" << std::endl;
+        std::cerr << "Usage: " << argv[0] << " <generate|load> <file|count>" << std::endl;
+        return 1;
+    }
+
     // initialize glfw
     GLFWGuard glfw_guard;
 
@@ -45,6 +54,7 @@ int main() {
     GLFWwindow *glfw_window = glfwCreateWindow(DEFAULT_WIDTH, DEFAULT_HEIGHT, "yay opengl", NULL, NULL);
     if (!glfw_window) {
         std::cerr << "Failed to create glfw window" << std::endl;
+        std::cerr << "Is OpenGL 4.6 supported?" << std::endl;
         return 1;
     }
     glfwMakeContextCurrent(glfw_window);
@@ -62,22 +72,40 @@ int main() {
     Graphics &graphics = window.graphics;
 
     // create a sphere
-    IcosphereGeometry sphere_geometry(3);
+    IcosphereGeometry sphere_geometry(10);
+
+    // seed random
+    srand((unsigned long) time(NULL));
 
     // initialize simulation
     NBody nbody;
-    nbody.randomly_generate_bodies(100);
+
+    if (argv[1] == "generate"sv) {
+        int count;
+        try {
+            count = std::stoi(argv[2]);
+        } catch (std::invalid_argument &) {
+            std::cerr << "Invalid number provided" << std::endl;
+            return 1;
+        }
+        nbody.randomly_generate_bodies(count);
+    } else if (argv[1] == "load"sv) {
+        nbody.read_bodies_from_csv(argv[2]);
+    } else {
+        std::cerr << "Unknown subcommand [" << argv[1] << "]" << std::endl;
+        return 1;
+    }
+
     nbody.simulate_frame();
     Octree &tree = *nbody.m_bodies;
 
     // main loop
     while (!window.should_close()) {
         graphics.camera.process_input();
-        float time = glfwGetTime();
-        if (glfwGetKey(glfw_window, GLFW_KEY_R) == GLFW_PRESS) nbody.simulate_frame();
-        if (glfwGetKey(glfw_window, GLFW_KEY_F) == GLFW_PRESS) nbody.randomly_generate_bodies(1);
-        // std::cout << "time for simulate_frame: " << glfwGetTime() - time << std::endl;
-        time = glfwGetTime();
+        if (graphics.camera.run_simulation || (glfwGetKey(glfw_window, GLFW_KEY_F) == GLFW_PRESS)) {
+            nbody.simulate_frame();
+        }
+        if (glfwGetKey(glfw_window, GLFW_KEY_G) == GLFW_PRESS) nbody.randomly_generate_bodies(1);
 
         // render
         {
@@ -89,7 +117,6 @@ int main() {
                 float radius = node.mass / 1e13;
                 render_geometry_at(graphics, sphere_geometry, pos, radius);
             }
-            // std::cout << "time for render: " << glfwGetTime() - time << std::endl;
         }
 
         window.frame_done();

@@ -14,6 +14,7 @@ Camera::Camera(Graphics &graphics):
     mouse_captured(false),
     last_x(0.0f),
     last_y(0.0f),
+    run_simulation(false),
     graphics(graphics) {}
 
 void Camera::update() {
@@ -85,6 +86,10 @@ void Camera::handle_keyboard_input(int key, int, int action, int) {
                 mouse_captured = false;
                 glfwSetInputMode(glfw_window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
             }
+            break;
+        }
+        case GLFW_KEY_R: {
+            run_simulation = !run_simulation;
             break;
         }
     }

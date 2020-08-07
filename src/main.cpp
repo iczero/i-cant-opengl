@@ -112,7 +112,7 @@ int main(int argc, char **argv) {
         {
             graphics.begin_render();
             for (auto &node : tree) {
-                glm::vec3 pos(node.position.x, node.position.y, node.position.z);
+                glm::vec3 pos(node.position);
                 // TODO: fix hardcoded scale somehow
                 pos /= 10.0f;
                 float radius = node.mass / 1e13;

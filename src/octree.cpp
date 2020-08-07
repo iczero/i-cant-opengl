@@ -10,7 +10,6 @@
 #define BottomLeftBack 7*/
 
 OctreeNode::OctreeNode():
-    force(0.0),
     mass(0.0),
     parent(nullptr) {}
 OctreeNode::OctreeNode(glm::dvec3 position, glm::dvec3 velocity, glm::dvec3 force, double mass):
@@ -71,6 +70,12 @@ bool Octree::bounds_check(glm::dvec3 &position) {
         && position.z >= (origin.z - halfDim.z) && position.z <= (origin.z + halfDim.z));
 }
 
+bool Octree::bounds_check_strict(glm::dvec3 &position) {
+    return (position.x > (origin.x - halfDim.x) && position.x < (origin.x + halfDim.x)
+        && position.y > (origin.y - halfDim.y) && position.y < (origin.y + halfDim.y)
+        && position.z > (origin.z - halfDim.z) && position.z < (origin.z + halfDim.z));
+}
+
 // insert node into tree
 bool Octree::insert(OctreeNode *node) {
     // check if node is out of bounds 
@@ -89,7 +94,7 @@ bool Octree::insert(OctreeNode *node) {
         }
         if (data->position == node->position) {
             // throw std::runtime_error("two nodes with identical positions exist");
-            std::cerr << "warning: attempted to insert 2 nodes at the same position" << std::endl;
+            std::cerr << "warning: attempted to insert 2 nodes at the same position, dropping" << std::endl;
             return false;
         }
 
@@ -169,6 +174,24 @@ bool Octree::remove(OctreeNode* node) {
             // getOctant has accuracy problems sometimes????
             // try using node->parent instead
             if (!node->parent) return false;
+            std::cerr << "warning: failed to remove node" << std::endl;
+            std::cerr << "  position: (" << node->position.x << ", " << node->position.y << ", "
+                << node->position.z << ")" << std::endl;
+            std::cerr << "  current search octant: " << this << std::endl;
+            std::cerr << "  search octant origin: (" << origin.x << ", " << origin.y << ", "
+                << origin.z << ")" << std::endl;
+            std::cerr << "  getOctant says: " << target_octant << std::endl;
+            std::cerr << "  node->parent: " << node->parent << std::endl;
+            std::cerr << "  node->parent origin is: (" << node->parent->origin.x << ", "
+                << node->parent->origin.y << ", " << node->parent->origin.z << ")" << std::endl;
+            // std::cerr << "  node->parent->getOctant(node): " << node->parent->getOctant(node->position) << std::endl;
+            if (node->parent->parent) {
+                std::cerr << "  node->parent->parent: " << node->parent->parent << std::endl;
+                std::cerr << "  node->parent->parent origin is: (" << node->parent->parent->origin.x << ", "
+                    << node->parent->parent->origin.y << ", " << node->parent->parent->origin.z << ")" << std::endl;
+                std::cerr << "  node->parent->parent->getOctant(node->position): " << node->parent->parent->getOctant(node->position) << std::endl;
+            }
+            std::cerr << "  attempting to resolve octant from parent" << std::endl;
             bool fallback_succeeded = false;
             for (auto i = 0U; i < 8; i++) {
                 if (node->parent == children[i]) {
@@ -177,7 +200,12 @@ bool Octree::remove(OctreeNode* node) {
                     break;
                 }
             }
-            if (!fallback_succeeded) return false;
+            if (fallback_succeeded) {
+                std::cerr << "  success: resolved to octant " << target_octant << std::endl;
+            } else {
+                std::cerr << "  could not find parent octant in this->children, giving up" << std::endl;
+                return false;
+            }
         }
         if (children[target_octant]->remove(node)) {
             // removed successfully, check if node is now empty
@@ -209,7 +237,7 @@ void Octree::reinsert_at(OctreeNode *node, glm::dvec3 new_position) {
 
     {
         Octree &parent = *node->parent;
-        if (parent.bounds_check(new_position)) {
+        if (parent.bounds_check_strict(new_position)) {
             // node does not need to be reinserted
             node->position = new_position;
             return;
@@ -218,7 +246,25 @@ void Octree::reinsert_at(OctreeNode *node, glm::dvec3 new_position) {
     }
 
     // remove and reinsert
-    if (!remove(node)) std::cerr << "warning: reinsert failed to remove old node" << std::endl;
+    if (!remove(node)) {
+        std::cerr << "warning: reinsert failed to remove old node" << std::endl;
+        std::cerr << "  position: (" << node->position.x << ", " << node->position.y << ", "
+            << node->position.z << ")" << std::endl;
+        std::cerr << "  node->parent is: " << node->parent << std::endl;
+        std::cerr << "  node->parent origin is: (" << node->parent->origin.x << ", "
+            << node->parent->origin.y << ", " << node->parent->origin.z << ")" << std::endl;
+        // std::cerr << "  node->parent.getOctant(node): " << node->parent->getOctant(node->position) << std::endl;
+        if (node->parent->parent) {
+            std::cerr << "  node->parent->parent: " << node->parent->parent << std::endl;
+            std::cerr << "  node->parent->parent origin is: (" << node->parent->parent->origin.x << ", "
+                << node->parent->parent->origin.y << ", " << node->parent->parent->origin.z << ")" << std::endl;
+            std::cerr << "  node->parent->parent->getOctant(node->position): " << node->parent->parent->getOctant(node->position) << std::endl;
+        }
+        std::cerr << "warning: forcing object to parent octant origin to prevent " <<
+            "a crash" << std::endl;
+        node->position = node->parent->origin;
+        return;
+    }
     node->position = new_position;
     insert(node);
 }

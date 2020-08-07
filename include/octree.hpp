@@ -65,6 +65,7 @@ public:
 	bool isLeafNode();
 
 	bool bounds_check(glm::dvec3 &position);
+	bool bounds_check_strict(glm::dvec3 &position);
 	
 	// insert node into tree
 	bool insert(OctreeNode *node);

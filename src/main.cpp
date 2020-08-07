@@ -1,5 +1,6 @@
 #include <iostream>
 #include <string_view>
+#include <time.h>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
@@ -46,15 +47,15 @@ int main(int argc, char **argv) {
     // initialize glfw
     GLFWGuard glfw_guard;
 
-    // opengl 4.6
+    // opengl 4.3
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 
     // create window
     GLFWwindow *glfw_window = glfwCreateWindow(DEFAULT_WIDTH, DEFAULT_HEIGHT, "yay opengl", NULL, NULL);
     if (!glfw_window) {
         std::cerr << "Failed to create glfw window" << std::endl;
-        std::cerr << "Is OpenGL 4.6 supported?" << std::endl;
+        std::cerr << "Is OpenGL 4.3 supported?" << std::endl;
         return 1;
     }
     glfwMakeContextCurrent(glfw_window);

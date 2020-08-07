@@ -38,8 +38,14 @@ common = [
 ]
 
 cxxflags = []
+ldflags = []
 add_project_arguments(cxxflags, language: 'cpp')
+
+if host_machine.system() == 'windows'
+    ldflags += ['-static', '-static-libgcc', '-static-libstdc++']
+endif
 
 executable('main', common + ['src/main.cpp'],
     include_directories: include,
-    dependencies: dependencies)
+    dependencies: dependencies,
+    link_args: ldflags)

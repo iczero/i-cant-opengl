@@ -23,6 +23,9 @@ void Graphics::init() {
     // wireframe drawing mode
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
+    // enable vsync
+    glfwSwapInterval(1);
+
     // setup timekeeping
     lastFrameTime = glfwGetTime();
     deltaTime = 1.0f;
